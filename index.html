@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ตรวจ Metformin &gt; 1000 มก./วัน ในผู้ป่วย DTG</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --blue: #67A2C5;
+      --blue-dark: #4d87aa;
+      --mint: #9BCEC1;
+      --cream: #FFEBD3;
+      --coral: #FFB6A6;
+      --manual: #FFF7D9;
+      --ink: #333333;
+      --muted: #666666;
+      --line: #EAEAEA;
+      --bg: #FAFAFA;
+      --shadow: 0 1px 3px rgba(30, 50, 70, .06), 0 8px 24px rgba(30, 50, 70, .05);
+      --shadow-hover: 0 4px 10px rgba(30, 50, 70, .10), 0 14px 32px rgba(30, 50, 70, .09);
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      font-family: 'Kanit', -apple-system, 'Segoe UI', Tahoma, sans-serif;
+      color: var(--ink);
+      margin: 0;
+      background: var(--bg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased
+    }
+
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 40px 24px 72px
+    }
+
+    /* header */
+    .app-head {
+      text-align: center;
+      margin-bottom: 28px
+    }
+
+    .app-head .logo {
+      width: 68px;
+      height: 68px;
+      margin: 0 auto 14px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--blue), var(--mint));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      box-shadow: var(--shadow)
+    }
+
+    h1 {
+      font-size: 35px;
+      font-weight: 700;
+      letter-spacing: -.4px;
+      margin: 0 0 8px;
+      line-height: 1.2
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 400;
+      margin: 0 auto;
+      max-width: 640px
+    }
+
+    /* privacy */
+    .privacy {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      background: #EAF6F2;
+      border: 1px solid var(--mint);
+      color: #2f6f62;
+      font-size: 15px;
+      font-weight: 500;
+      padding: 14px 20px;
+      border-radius: 16px;
+      margin: 0 0 22px
+    }
+
+    /* upload */
+    .drop {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      border: 2.5px dashed #b9d5e6;
+      border-radius: 22px;
+      background: #fff;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease
+    }
+
+    .drop:hover,
+    .drop.over {
+      background: #F4FAFD;
+      border-color: var(--blue);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-hover)
+    }
+
+    .drop .icon {
+      font-size: 46px;
+      line-height: 1;
+      margin-bottom: 14px
+    }
+
+    .drop b {
+      color: var(--blue-dark);
+      font-weight: 600;
+      font-size: 19px
+    }
+
+    .drop small {
+      display: block;
+      color: var(--muted);
+      margin-top: 8px;
+      font-size: 14px
+    }
+
+    #file {
+      display: none
+    }
+
+    .period {
+      font-size: 14px;
+      color: var(--muted);
+      margin: 26px 0 6px;
+      animation: fadeUp .35s ease both
+    }
+
+    /* dashboard cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin: 14px 0 8px;
+      animation: fadeUp .4s ease both
+    }
+
+    .card {
+      border-radius: 20px;
+      padding: 24px 18px;
+      text-align: center;
+      background: #fff;
+      box-shadow: var(--shadow);
+      transition: transform .25s ease, box-shadow .25s ease
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover)
+    }
+
+    .card .n {
+      font-size: 42px;
+      font-weight: 700;
+      line-height: 1;
+      color: #2b2b2b
+    }
+
+    .card .l {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 8px
+    }
+
+    .card {
+      background: var(--cream)
+    }
+
+    /* Total */
+    .card.red {
+      background: var(--coral)
+    }
+
+    /* Overdose */
+    .card.red .n {
+      color: #a63a2b
+    }
+
+    .card.amber {
+      background: var(--manual)
+    }
+
+    /* Manual */
+    .card.amber .n {
+      color: #9a7b17
+    }
+
+    .card.green {
+      background: var(--mint)
+    }
+
+    /* Normal */
+    .card.green .n {
+      color: #2f6f62
+    }
+
+    /* section titles */
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 36px 0 14px;
+      color: #2b2b2b;
+      animation: fadeUp .4s ease both
+    }
+
+    h2.red {
+      color: #c0392b
+    }
+
+    h2.amber {
+      color: #9a7b17
+    }
+
+    /* tables */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 14px;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      margin-top: 4px;
+      animation: fadeUp .4s ease both
+    }
+
+    thead th {
+      background: #E3F0F7;
+      color: #33627d;
+      font-weight: 600;
+      text-align: left;
+      padding: 13px 14px;
+      border-bottom: 1px solid #d6e6f0
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #F1F1F1;
+      text-align: left;
+      vertical-align: top;
+      color: var(--ink)
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none
+    }
+
+    tbody tr:nth-child(even) {
+      background: #FAFBFC
+    }
+
+    tbody tr:hover {
+      background: #F0F7FB
+    }
+
+    tr.rep td {
+      background: #FFE1D9
+    }
+
+    tr.rep:hover td {
+      background: #FFD5CB
+    }
+
+    .pill {
+      font-weight: 700;
+      color: #2b2b2b
+    }
+
+    .print-col {
+      display: none;
+    }
+
+    .dose {
+      font-weight: 700;
+      color: #c0392b
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--coral);
+      color: #fff;
+      padding: 2px 11px;
+      border-radius: 999px;
+      margin-left: 8px;
+      vertical-align: middle
+    }
+
+    /* empty state */
+    .empty {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 32px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 17px;
+      box-shadow: var(--shadow);
+      animation: fadeUp .4s ease both
+    }
+
+    /* buttons */
+    .btns {
+      margin: 22px 0 6px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      animation: fadeUp .4s ease both
+    }
+
+    button {
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      border: 1.5px solid var(--blue);
+      background: var(--blue);
+      color: #fff;
+      padding: 11px 22px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(103, 162, 197, .3);
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      background: var(--blue-dark);
+      box-shadow: 0 5px 14px rgba(103, 162, 197, .4)
+    }
+
+    button.ghost {
+      background: #fff;
+      color: var(--blue-dark);
+      box-shadow: none
+    }
+
+    button.ghost:hover {
+      background: #F4FAFD
+    }
+
+    /* footer card */
+    .foot {
+      margin-top: 36px;
+      font-size: 14px;
+      line-height: 1.75;
+      color: #6b5842;
+      background: var(--cream);
+      border: 1px solid #f2d8bb;
+      border-radius: 18px;
+      padding: 20px 24px
+    }
+
+    code {
+      background: rgba(103, 162, 197, .16);
+      color: #33627d;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 13px
+    }
+
+    /* credit / license */
+    .printonly {
+      display: none
+    }
+
+    .credit {
+      margin-top: 26px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      text-align: center;
+      font-size: 12.5px;
+      line-height: 1.8;
+      color: #9aa0a6
+    }
+
+    .credit b {
+      color: #7a8288;
+      font-weight: 600
+    }
+
+    .credit .cc {
+      font-weight: 600;
+      color: #7a8288
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    /* responsive */
+    @media(max-width:900px) {
+      .cards {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      h1 {
+        font-size: 30px
+      }
+    }
+
+    @media(max-width:560px) {
+      .wrap {
+        padding: 28px 16px 56px
+      }
+
+      .cards {
+        grid-template-columns: 1fr
+      }
+
+      .btns {
+        flex-direction: column
+      }
+
+      .btns button {
+        width: 100%
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap
+      }
+
+      h1 {
+        font-size: 26px
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff
+      }
+
+      .drop,
+      .btns,
+      .privacy,
+      .foot,
+      .no-print,
+      .cards,
+      .sub {
+        display: none !important
+      }
+
+      .printonly {
+        display: block !important;
+        text-align: center;
+        color: #555;
+        font-size: 12.5px;
+        margin: 2px 0 14px
+      }
+
+      .print-col {
+        display: table-cell !important;
+      }
+      
+      .chk-box {
+        width: 16px;
+        height: 16px;
+        border: 1px solid #777;
+        margin: 0 auto;
+        border-radius: 3px;
+        background: #fff;
+      }
+
+      .wrap {
+        max-width: 100%;
+        padding: 0
+      }
+
+      * {
+        animation: none !important;
+        color: #000 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
+      .tag {
+        border: 1px solid #000;
+        color: #000 !important;
+      }
+
+      thead th {
+        border-bottom: 2px solid #000 !important;
+      }
+
+      td, th {
+        border-bottom: 1px solid #ccc !important;
+      }
+
+      table,
+      .card,
+      .empty {
+        box-shadow: none;
+        border: 1px solid var(--line)
+      }
+
+      .credit {
+        margin-top: 24px
+      }
+
+      h2 {
+        page-break-after: avoid
+      }
+
+      tr {
+        page-break-inside: avoid
+      }
+
+      .credit {
+        page-break-inside: avoid
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="app-head">
+      <div class="logo">🏥</div>
+      <h1>Metformin & Dolutegavir Monitoring</h1>
+      <p class="sub">อัปโหลดไฟล์ export จาก SQL แล้วระบบจะตรวจหาผู้ป่วยที่ได้ Metformin เกินขนาดขณะใช้ Dolutegravir
+        โดยอัตโนมัติ</p>
+    </header>
+
+    <div class="printonly" id="genstamp"></div>
+
+    <div class="privacy">🔒 ไฟล์ของท่านถูกประมวลผลในเบราว์เซอร์เครื่องนี้เท่านั้น —
+      ข้อมูลผู้ป่วยไม่ถูกส่งออกไปที่ใดทั้งสิ้น</div>
+
+    <label class="drop" id="drop" for="file">
+      <div class="icon">📂</div>
+      <b>ลากไฟล์ Excel มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</b>
+      <small>รองรับไฟล์ .xlsx และ .csv จากคำสั่ง SQL "ยาที่ใช้ร่วมกัน"</small>
+    </label>
+    <input type="file" id="file" accept=".xlsx,.xls,.csv">
+
+    <div id="results"></div>
+
+    <div class="foot">
+      <b>ℹ️ เกณฑ์การตรวจ</b>
+      <ul style="margin-top: 8px; margin-bottom: 0; padding-left: 20px;">
+        <li>Metformin ห้ามเกิน 1000 มก./วัน (มากกว่า 2 เม็ด/วัน = เกิน)</li>
+        <li>Metformin icode <code>1000184</code></li>
+        <li>กลุ่ม DTG: <code>166011, 1650024, 1670018, 1680003, 1650014, 1650040</code></li>
+        <li>เคสที่อ่านขนาดยาไม่ได้ (ไม่มีรหัสวิธีใช้ / เป็นข้อความอิสระ / มี Metformin หลายบรรทัด) จะถูกส่งไปช่อง
+          "ต้องตรวจด้วยตนเอง" เสมอ ไม่ปล่อยผ่าน</li>
+      </ul>
+    </div>
+
+    <footer class="credit">
+      <b>ระบบ Metformin &amp; Dolutegravir Monitoring System</b><br>
+      ออกแบบและพัฒนาโดย ภญ.ธมลวรรณ จันทร์แก้ว (โรงพยาบาลสันกำแพง)<br>
+      <span class="cc">ลิขสิทธิ์ © 2569 (2026) สงวนสิทธิ์ทุกประการ</span> — ห้ามคัดลอก ดัดแปลง
+      หรือนำไปใช้โดยไม่ได้รับอนุญาต
+    </footer>
+  </div>
+
+  <script>
+    /**
+     * =========================================================================
+     * ระบบ Metformin & Dolutegavir monitoring system
+     * =========================================================================
+     * ออกแบบและพัฒนาโดย: ภญ.ธมลวรรณ จันทร์แก้ว (โรงพยาบาลสันกำแพง)
+     * ระบบนี้ถือเป็นทรัพย์สินทางปัญญาของผู้พัฒนา ห้ามคัดลอก ดัดแปลงหรือนำไปใช้โดยไม่ได้รับอนุญาต
+     * ลิขสิทธิ์ © 2569 (2026) สงวนสิทธิ์ทุกประการ
+     */
+
+    /* ---------- configuration ---------- */
+    var MET_ICODE = "1000184";
+    var STRENGTH = 500;      // mg per tablet
+    var LIMIT = 1000;     // mg per day (flag if strictly greater)
+    var DTG_ICODES = ["166011", "1650024", "1670018", "1680003", "1650014", "1650040"];
+
+    /* ---------- dose parser ---------- */
+    function parsePills(usage) {
+      if (usage == null) return null;
+      var u = String(usage).trim();
+      if (u === "" || /^[-\s.]*$/.test(u)) return null;          // blank / "- -"
+      // three-slot morning-noon-night, e.g. 2-0-1PC
+      var m = u.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*[A-Za-z]*\s*$/);
+      if (m) return parseFloat(m[1]) + parseFloat(m[2]) + parseFloat(m[3]);
+      // N x M, e.g. 1x2pc, 0.5X1PC, 2x2pc, 1x3
+      m = u.match(/(\d+(?:\.\d+)?)\s*[xX]\s*(\d+(?:\.\d+)?)\s*[A-Za-z]*\s*$/);
+      if (m) return parseFloat(m[1]) * parseFloat(m[2]);
+      return null;                                             // unrecognised -> manual
+    }
+
+    /* ---------- column mapping (by Thai header, fallback to position) ---------- */
+    function mapCols(header) {
+      var idx = { date: 0, hn: 1, vn: 2, name: 3, icode: 4, drug: 5, qty: 6, usage: 7 };
+      header.forEach(function (h, i) {
+        h = String(h || "");
+        if (h.indexOf("วันที่") >= 0) idx.date = i;
+        else if (h === "HN" || h.indexOf("HN") >= 0) idx.hn = i;
+        else if (h.indexOf("VN") >= 0) idx.vn = i;
+        else if (h.indexOf("ชื่อ-") >= 0) idx.name = i;
+        else if (h.indexOf("รหัสยา") >= 0) idx.icode = i;
+        else if (h.indexOf("ชื่อยา") >= 0) idx.drug = i;
+        else if (h.indexOf("จำนวน") >= 0) idx.qty = i;
+        else if (h.indexOf("วิธีใช้") >= 0) idx.usage = i;
+      });
+      return idx;
+    }
+
+    function fmtDate(v) {
+      if (v instanceof Date && !isNaN(v)) {
+        return v.getFullYear() + "-" + String(v.getMonth() + 1).padStart(2, "0") + "-" + String(v.getDate()).padStart(2, "0");
+      }
+      return String(v == null ? "" : v);
+    }
+
+    /* ---------- main analysis ---------- */
+    function analyse(rows) {
+      var header = rows[0] || [];
+      var c = mapCols(header);
+      var body = rows.slice(1).filter(function (r) { return r && r.length && (r[c.icode] != null); });
+
+      // group by VN
+      var visits = {};            // vn -> {date,hn,name, met:[], arv:[]}
+      body.forEach(function (r) {
+        var vn = String(r[c.vn]);
+        if (!visits[vn]) visits[vn] = { date: r[c.date], hn: String(r[c.hn] || ""), name: String(r[c.name] || ""), met: [], arv: [] };
+        var code = String(r[c.icode]);
+        if (code === MET_ICODE) visits[vn].met.push({ usage: r[c.usage], qty: r[c.qty] });
+        if (DTG_ICODES.indexOf(code) >= 0) visits[vn].arv.push(String(r[c.drug] || "").trim());
+      });
+
+      var violations = [], manual = [], okCount = 0, dates = [];
+      Object.keys(visits).forEach(function (vn) {
+        var v = visits[vn];
+        if (v.met.length === 0) return;               // safety: not a metformin visit
+        if (v.date instanceof Date) dates.push(v.date);
+        var regimen = v.arv.length ? Array.from(new Set(v.arv)).join(", ") : "(ไม่พบชื่อสูตร)";
+        var base = { date: v.date, hn: v.hn, name: v.name, vn: vn, regimen: regimen };
+
+        if (v.met.length > 1) {                         // rare: multiple metformin lines
+          manual.push(Object.assign({}, base, { reason: "Metformin หลายบรรทัดในวิสิตเดียว", usage: v.met.map(function (x) { return x.usage; }).join(" | ") }));
+          return;
+        }
+        var usage = v.met[0].usage;
+        var pills = parsePills(usage);
+        if (pills === null) {
+          var blank = usage == null || /^[-\s.]*$/.test(String(usage).trim());
+          manual.push(Object.assign({}, base, { reason: blank ? "Metformin ไม่มีวิธีใช้ยา (qty=0)" : "Metformin: อ่านรหัสขนาดยาไม่ได้ / ข้อความอิสระ", usage: String(usage == null ? "" : usage) }));
+          return;
+        }
+        var mg = pills * STRENGTH;
+        if (mg > LIMIT) violations.push(Object.assign({}, base, { pills: pills, mg: mg, usage: String(usage) }));
+        else okCount++;
+      });
+
+      // sort newest first
+      var byDate = function (a, b) { var x = a.date instanceof Date ? a.date.getTime() : 0, y = b.date instanceof Date ? b.date.getTime() : 0; return y - x; };
+      violations.sort(byDate); manual.sort(byDate);
+
+      // repeat offenders WITHIN this file (same HN flagged on >1 date)
+      var hnCount = {};
+      violations.forEach(function (v) { hnCount[v.hn] = (hnCount[v.hn] || 0) + 1; });
+      violations.forEach(function (v) { v.repeat = hnCount[v.hn] > 1; });
+
+      var period = "";
+      if (dates.length) {
+        dates.sort(function (a, b) { return a - b; });
+        period = fmtDate(dates[0]) + "  ถึง  " + fmtDate(dates[dates.length - 1]);
+      }
+
+      return { violations: violations, manual: manual, ok: okCount, total: Object.keys(visits).length, period: period };
+    }
+
+    /* ---------- rendering ---------- */
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]; }); }
+
+    function render(res) {
+      document.getElementById("drop").style.display = "none";
+      var h = "";
+      if (res.period) h += '<p class="period">ช่วงวันที่มารับบริการในไฟล์: <b>' + esc(res.period) + '</b></p>';
+      h += '<div class="cards">'
+        + '<div class="card"><div class="n">' + res.total + '</div><div class="l">วิสิตที่ตรวจ (Metformin + DTG)</div></div>'
+        + '<div class="card red"><div class="n">' + res.violations.length + '</div><div class="l">🔴 เกิน 1000 มก./วัน</div></div>'
+        + '<div class="card amber"><div class="n">' + res.manual.length + '</div><div class="l">🟡 ต้องตรวจด้วยตนเอง</div></div>'
+        + '<div class="card green"><div class="n">' + res.ok + '</div><div class="l">✅ ไม่เกินเกณฑ์</div></div>'
+        + '</div>';
+
+      h += '<div class="btns no-print">'
+        + '<button onclick="window.print()">🖨️ พิมพ์ / บันทึกเป็น PDF</button>'
+        + '<button class="ghost" onclick="location.reload()">↻ ล้างและเริ่มใหม่</button></div>';
+
+      // violations
+      h += '<h2 class="red">🔴 เกินขนาด — ต้องแจ้งแพทย์แก้ไข (' + res.violations.length + ')</h2>';
+      if (!res.violations.length) { h += '<p class="empty">ไม่พบเคสที่ Metformin เกิน 1000 มก./วัน 🎉</p>'; }
+      else {
+        h += '<table><thead><tr><th>วันที่</th><th>HN</th><th>ชื่อ-นามสกุล</th>'
+          + '<th>เม็ด/วัน</th><th>มก./วัน</th><th>สูตร ARV (DTG)</th><th>วิธีใช้ (ต้นฉบับ)</th><th class="print-col" style="width:80px;text-align:center;">ตรวจสอบ</th></tr></thead><tbody>';
+        res.violations.forEach(function (v) {
+          h += '<tr class="' + (v.repeat ? "rep" : "") + '"><td>' + esc(fmtDate(v.date)) + '</td><td>' + esc(v.hn)
+            + '</td><td>' + esc(v.name) + (v.repeat ? '<span class="tag">ซ้ำ</span>' : '') + '</td>'
+            + '<td class="pill">' + v.pills + '</td><td class="dose">' + v.mg + '</td><td>' + esc(v.regimen)
+            + '</td><td>' + esc(v.usage) + '</td><td class="print-col"><div class="chk-box"></div></td></tr>';
+        });
+        h += '</tbody></table>';
+      }
+
+      // manual
+      h += '<h2 class="amber">🟡 ต้องตรวจด้วยตนเอง — อ่านขนาดยาอัตโนมัติไม่ได้ (' + res.manual.length + ')</h2>';
+      if (!res.manual.length) { h += '<p class="empty">ไม่มี</p>'; }
+      else {
+        h += '<table><thead><tr><th>วันที่</th><th>HN</th><th>ชื่อ-นามสกุล</th>'
+          + '<th>เหตุผล</th><th>สูตร ARV (DTG)</th><th>วิธีใช้ (ต้นฉบับ)</th><th class="print-col" style="width:80px;text-align:center;">ตรวจสอบ</th></tr></thead><tbody>';
+        res.manual.forEach(function (v) {
+          h += '<tr><td>' + esc(fmtDate(v.date)) + '</td><td>' + esc(v.hn) + '</td><td>' + esc(v.name)
+            + '</td><td>' + esc(v.reason) + '</td><td>' + esc(v.regimen)
+            + '</td><td>' + esc(v.usage) + '</td><td class="print-col"><div class="chk-box"></div></td></tr>';
+        });
+        h += '</tbody></table>';
+      }
+
+      document.getElementById("results").innerHTML = h;
+    }
+
+    /* ---------- file handling ---------- */
+    function handleFile(file) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          var data = new Uint8Array(e.target.result);
+          var wb = XLSX.read(data, { type: "array", cellDates: true });
+          var ws = wb.Sheets[wb.SheetNames[0]];
+          var rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
+          render(analyse(rows));
+        } catch (err) {
+          document.getElementById("results").innerHTML = '<p class="empty">อ่านไฟล์ไม่สำเร็จ: ' + esc(err.message) + '</p>';
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    var drop = document.getElementById("drop"), input = document.getElementById("file");
+    input.addEventListener("change", function () { if (input.files[0]) handleFile(input.files[0]); });
+    ["dragenter", "dragover"].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add("over"); }); });
+    ["dragleave", "drop"].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove("over"); }); });
+    drop.addEventListener("drop", function (e) { var f = e.dataTransfer.files[0]; if (f) handleFile(f); });
+
+    /* report generation timestamp (shown only when printing/saving PDF) */
+    (function () {
+      var gs = document.getElementById("genstamp");
+      if (gs) {
+        try { gs.textContent = "พิมพ์รายงานเมื่อ " + new Date().toLocaleString("th-TH"); }
+        catch (e) { gs.textContent = "พิมพ์รายงานเมื่อ " + new Date().toLocaleString(); }
+      }
+    })();
+  </script>
+</body>
+
+</html>
