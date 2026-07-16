@@ -33,7 +33,7 @@
 คุณสามารถคัดลอกโค้ดด้านล่างนี้ไปดึงข้อมูล: 
 
 ```sql
-SELECT 
+SELECT
     v.vstdate AS 'วันที่มารับบริการ',
     v.hn AS 'HN',
     v.vn AS 'VN',
@@ -41,27 +41,27 @@ SELECT
     d.icode AS 'รหัสยา',
     d.name AS 'ชื่อยา',
     o.qty AS 'จำนวนยา',
-    -- ดึงและรวมประโยควิธีใช้ยา 3 บรรทัดเข้าด้วยกัน
+    -- ดึงวิธีใช้ยาจากตาราง drugusage (แสดงทั้งบรรทัดที่ 1, 2, 3 มารวมกัน)
     CONCAT(u.name1, ' ', IFNULL(u.name2, ''), ' ', IFNULL(u.name3, ''), IFNULL(u.shortlist, '')) AS 'วิธีใช้ยา'
 FROM vn_stat v
 LEFT JOIN patient p ON v.hn = p.hn
 LEFT JOIN opitemrece o ON v.vn = o.vn
 LEFT JOIN drugitems d ON o.icode = d.icode
-LEFT JOIN drugusage u ON o.drugusage = u.drugusage
-WHERE v.vstdate BETWEEN '2026-01-01' AND '2026-01-15' /* <-- 📌 แก้ไขช่วงวันที่ตรวจเช็กที่นี่ */
+LEFT JOIN drugusage u ON o.drugusage = u.drugusage -- เชื่อมตารางวิธีใช้ยาที่นี่
+WHERE v.vstdate BETWEEN '2026-06-01' AND '2026-06-30' /* <-- เปลี่ยนช่วงวันที่ตรงนี้ */
   AND v.vn IN (
-      -- เงื่อนไขที่ 1: ค้นหาเฉพาะ Visit ที่มียา Metformin (รหัส icode: 1000184)
+      -- เงื่อนไขที่ 1: ต้องมียา Metformin (รหัส 1000184) ใน visit นั้น
       SELECT distinct vn 
       FROM opitemrece 
       WHERE icode = '1000184'
   )
   AND v.vn IN (
-      -- เงื่อนไขที่ 2: ค้นหาเฉพาะ Visit ที่มียาตระกูล Dolutegravir (DTG/TLD/KOCITAF) ร่วมด้วย
+      -- เงื่อนไขที่ 2: ต้องมีกลุ่มยา Dolutegravir / KOCITAF / TLD ใน visit นั้นด้วย
       SELECT distinct vn 
       FROM opitemrece 
       WHERE icode IN ('166011', '1650024', '1670018', '1680003', '1650014', '1650040')
   )
-  -- กรองให้แสดงเฉพาะแถวของยาทั้งสองกลุ่มนี้ในใบสั่งยาเพื่อประมวลผล
+  -- กรองแสดงเฉพาะรายการยาที่เราสนใจในใบสั่งยา
   AND o.icode IN ('1000184', '166011', '1650024', '1670018', '1680003', '1650014', '1650040')
 ORDER BY v.vstdate DESC, v.vn, o.icode
 ```
